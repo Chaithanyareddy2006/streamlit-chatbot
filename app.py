@@ -1,9 +1,15 @@
 import streamlit as st
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
-
 import os
-os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+
+# Load API key with fallback
+GOOGLE_API_KEY = st.secrets.get("GOOGLE_API_KEY", os.getenv("GOOGLE_API_KEY"))
+if not GOOGLE_API_KEY:
+    st.error("❌ GOOGLE_API_KEY is missing. Please add it to secrets.toml or as an environment variable.")
+    st.stop()
+
+os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
 # Initialize the LLM
 llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash")
@@ -32,11 +38,14 @@ if user_input:
     st.session_state.chat_history.append(HumanMessage(content=user_input))
     st.chat_message("user").markdown(user_input)
 
-    # Get response from Gemini
-    result = llm.invoke(st.session_state.chat_history)
-    response = result.content
+    try:
+        # Get response from Gemini
+        result = llm.invoke(st.session_state.chat_history)
+        response = result.content
+    except Exception as e:
+        st.error(f"❌ An error occurred: {str(e)}")
+        response = "I'm sorry, I couldn't process your request."
 
     # Append AI response
     st.session_state.chat_history.append(AIMessage(content=response))
     st.chat_message("assistant").markdown(response)
-        
