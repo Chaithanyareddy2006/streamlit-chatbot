@@ -39,3 +39,4 @@ if user_input:
     # Append AI response
     st.session_state.chat_history.append(AIMessage(content=response))
     st.chat_message("assistant").markdown(response)
+        
